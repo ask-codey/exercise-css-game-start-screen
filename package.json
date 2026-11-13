@@ -1,0 +1,12 @@
+{
+  "name": "exercise-css-game-start-screen",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Exercise code for Exercise: An Animated Game Start Screen in CSS in Depth on ask-codey.com",
+  "scripts": {
+    "test": "node --test"
+  },
+  "devDependencies": {
+    "jsdom": "30.1.3"
+  }
+}

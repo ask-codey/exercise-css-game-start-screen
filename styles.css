@@ -1,6 +1,7 @@
 /* Star Hopper: the start screen's styles.
 
-   Part 1 is the look of the screen: the night sky, the stars, the title, the menu and the loading bar.
+   Part 1 is the look of the screen: the night sky, the stars, the title, the menu, today's planet card and the
+   loading bar.
    It's ready to use, so you don't need to change it.
 
    Part 2, at the bottom, is yours: the motion. */
@@ -137,6 +138,59 @@ body {
   background: linear-gradient(90deg, #2ec4d6, #ffd23f);
 }
 
+/* Today's planet: a card with a front and a back. Both faces sit in the same spot, the back one on top, until
+   your rules in Part 2 turn it into a card that flips over. */
+.planet-card {
+  position: relative;
+  width: 16rem;
+  height: 8rem;
+  margin: 0 auto;
+}
+
+.card-inner {
+  position: relative;
+  height: 100%;
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border: 2px solid #8f8cf2;
+  border-radius: 1rem;
+}
+
+.card-front {
+  background-color: #3d3a8c;
+}
+
+.card-back {
+  background-color: #2b2d5c;
+}
+
+.card-face p {
+  margin: 0;
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #ffd23f;
+}
+
+.card-link {
+  font-weight: bold;
+  color: #2ec4d6;
+}
+
+.card-link:focus-visible {
+  outline: 3px solid #2ec4d6;
+  outline-offset: 4px;
+}
+
 /* ---------- Part 2: the motion (yours to write) ----------
 
    Write these below, one at a time, and look at the page after each one.
@@ -154,8 +208,14 @@ body {
    4. A loading bar. Write a @keyframes rule that grows .loading-fill from nothing to its full width with scale
       (not width), from its left edge, about every 2 seconds, forever.
 
-   5. Motion that respects the reader. Add a @media (prefers-reduced-motion: reduce) rule, after your other
+   5. Today's planet flips over. Make the card under the menu turn over like a real card when it's hovered or
+      its link has keyboard focus: perspective (about 800px) on .planet-card; .card-inner keeps its faces in
+      3-D and turns 180 degrees around its vertical axis, with a transition of about 600ms; each .card-face is
+      hidden while it's turned away; and .card-back starts turned over.
+
+   6. Motion that respects the reader. Add a @media (prefers-reduced-motion: reduce) rule, after your other
       rules, that stops the stars and the loading bar, swaps the title's slide for a short fade (or no
-      animation), and keeps the buttons still on hover and focus.
+      animation), keeps the buttons still on hover and focus, and turns the planet card over at once, with no
+      turning transition.
 
    Every @keyframes rule animates only transform (translate, rotate, scale) and opacity. */

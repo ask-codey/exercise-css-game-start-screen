@@ -1,6 +1,6 @@
 // Checks the motion in your styles.css for the Star Hopper start screen: the @keyframes rules, the animations
-// on the stars, the title and the loading bar, the transition that lifts the menu buttons, and what changes for
-// readers who asked for less motion. It reads index.html and styles.css the way a browser does, and works out
+// on the stars, the title and the loading bar, the transition that lifts the menu buttons, the planet card that
+// flips over in 3-D, and what changes for readers who asked for less motion. It reads index.html and styles.css the way a browser does, and works out
 // which rule wins for each part of the screen. It can't watch anything move, so look at the page too: the
 // README's checklist covers that.
 // Run it with: npm test (run npm install once first). You don't need to change this file.
@@ -397,4 +397,64 @@ test('10) with reduced motion, the title and the buttons don\'t move', () => {
     check(hover.move === base || !slow,
       `With reduced motion, ${name} still lifts ${Math.abs(hover.move - base)}px over ${slow ? slow.duration : 0}ms. Keep it still: set translate: none for .menu-button:hover and :focus-visible inside the media query.`);
   }
+});
+
+// ---------- Today's planet: the card that flips (step 5) ----------
+
+const planetCard = one('.planet-card');
+const cardInner = one('.card-inner');
+const cardFaces = all('.card-face');
+const cardBack = one('.card-back');
+
+// True when a transform (or the rotate property) turns an element over: 180 degrees around its vertical axis.
+const HALF_TURN = /rotateY\(\s*-?(180deg|0?\.5turn)\s*\)|rotate3d\(\s*0\s*,\s*1\s*,\s*0\s*,\s*-?180deg\s*\)/;
+function turnedOver(element, state, reader) {
+  const styles = cascade(element, state, reader);
+  const transform = String(styles.value('transform'));
+  const rotate = String(styles.value('rotate')).trim();
+  return HALF_TURN.test(transform) || /^y\s+-?180deg$/.test(rotate);
+}
+const valueOf = (element, property) => String(cascade(element, 'base', full).value(property) ?? '').trim();
+
+test('11) the planet card is set up in 3-D: perspective, faces in 3-D, hidden backs and the back face turned over', () => {
+  check(planetCard && cardInner && cardFaces.length === 2 && cardBack,
+    'index.html should still have the planet card: .planet-card around .card-inner, with two .card-face elements, .card-front and .card-back. Put the page back the way it came.');
+  const perspective = valueOf(planetCard, 'perspective');
+  const hoverTransform = String(cascade(cardInner, 'hover', full).value('transform'));
+  check((perspective && perspective !== 'none') || /perspective\(/.test(hoverTransform),
+    'The card has no perspective yet, so its turn will look flat, only narrower. Give .planet-card, the part that stays still, perspective: 800px.');
+  check(valueOf(cardInner, 'transform-style') === 'preserve-3d',
+    `.card-inner has transform-style: ${valueOf(cardInner, 'transform-style') || 'flat'}, so it flattens its two faces into one picture and the back can never show. Use preserve-3d.`);
+  for (const face of cardFaces) {
+    check(valueOf(face, 'backface-visibility') === 'hidden',
+      `.${String(face.className).split(' ').join('.')} has backface-visibility: ${valueOf(face, 'backface-visibility') || 'visible'}, so it still shows, mirrored, when it's turned away. Give .card-face backface-visibility: hidden.`);
+  }
+  check(turnedOver(cardBack, 'base', full),
+    '.card-back doesn\'t start turned over, so it shows before the card turns. Give it transform: rotateY(180deg).');
+});
+
+test('12) the planet card turns over on hover and on keyboard focus, with a transition on .card-inner', () => {
+  check(!turnedOver(cardInner, 'base', full),
+    '.card-inner is turned over before anyone points at it. The turn belongs in the hover and focus rule only.');
+  check(turnedOver(cardInner, 'hover', full),
+    'The card doesn\'t turn over on hover. In a rule for .planet-card:hover .card-inner, turn it with transform: rotateY(180deg).');
+  check(turnedOver(cardInner, 'focus', full),
+    'The card turns over on hover, but not when its link has keyboard focus. Add .planet-card:focus-within .card-inner to the hover rule, with a comma.');
+  const turns = transitionsOf(cardInner, full).filter((transition) =>
+    ['transform', 'rotate', 'all'].includes(transition.property) && transition.duration > 0);
+  check(turns.length > 0,
+    '.card-inner has no transition for its turn, so the card jumps from front to back. Give .card-inner a transition on transform, about 600ms.');
+  const turn = turns[0];
+  check(turn.duration >= 200 && turn.duration <= 1500,
+    `The card's turn takes ${turn.duration}ms. Make it about 600ms: between 200ms and 1500ms reads as a card turning over.`);
+});
+
+test('13) with reduced motion, the planet card still turns over, but at once', () => {
+  check(reducedMotionQueries.length > 0, 'Add the @media (prefers-reduced-motion: reduce) rule first (check 8), then put the rules that calm the screen inside it.');
+  check(turnedOver(cardInner, 'hover', reduced),
+    'With reduced motion, the card no longer turns over on hover. Keep the turn, and take away only its transition.');
+  const slow = transitionsOf(cardInner, reduced).find((transition) =>
+    ['transform', 'rotate', 'all'].includes(transition.property) && transition.duration > 100);
+  check(!slow,
+    `With reduced motion, the card still takes ${slow ? slow.duration : 0}ms to turn over. Inside @media (prefers-reduced-motion: reduce), give .card-inner transition: none. Is the media query after the rule it changes?`);
 });
